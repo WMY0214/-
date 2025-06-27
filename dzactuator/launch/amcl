@@ -7,7 +7,8 @@
 
 	<!-- 启动自适应蒙特卡洛定位（AMCL）节点，用于机器人的定位 -->
 	<node pkg="amcl" type="amcl" name="amcl" output="screen">
-		<!-- 控制是否使用地图话题，设为false表示不使用地图话题，设为 true 时，动态地图和SLAM场景，更新更灵活，但可能增加通信开销；设为 false 时，适合静态地图场景，减少话题订阅的复杂性。 -->
+		<!-- 控制是否使用地图话题，设为 true 时，动态地图和SLAM场景，更新更灵活，但可能增加通信开销； -->
+		<!--设为false表示不使用地图话题，适合静态地图场景，减少话题订阅的复杂性。  -->
 		<param name="use_map_topic" value="false"/>
 		<!-- 指定激光扫描数据的话题名称 -->
 		<param name="scan_topic_" value="scan"/>
