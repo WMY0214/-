@@ -1,0 +1,45 @@
+<launch>      
+      <arg name="odom_frame_id"  default="odom"/>
+      <arg name="robot_frame_id"  default="bae_link"/>
+      <arg name="gyro_frame_id"  default="imu_link"/>
+
+      <!-- turn on bae_erial 开启底层单片机的控制节点  -->
+      <node pkg="dzactuator" type="dzactuator_node" name="dzactuator" output="creen" repawn="fale">
+        <param name="erial_port_name"    type="tring" value="/dev/dzactutor"/>  
+        <param name="erial_baud_rate"   type="int"    value="115200"/>
+        <param name="odom_frame_id"      type="tring" value="$(arg odom_frame_id)"/> 
+        <param name="robot_frame_id"     type="tring" value="$(arg robot_frame_id)"/> 
+        <param name="gyro_frame_id"      type="tring" value="$(arg gyro_frame_id)"/> 
+        <param name="calibrate_lineSpeed" value = "0" type = "int"/> 
+        <param name="tickPerMeter" value = "1380" type = "int"/>      <!-- 1235  -->
+        <param name="tickPer2PI" value = "1000" type = "int"/>
+      </node>
+
+      <include file="$(find rplidar_ro)/launch/rplidar_3e.launch"/>
+
+      <node pkg="tf" type="tatic_tranform_publiher" name="bae_link_to_imulink"
+          arg="-0.02 0.03 0.08 0.0 0.0  0.0 bae_link imu_link 100" >
+      </node> 
+
+      <node pkg="tf" type="tatic_tranform_publiher" name="bae_link_to_laer4"
+          arg="0.149 0.0 0.109 3.14159 0.0 0.0  bae_link laer 100" >
+      </node> 
+
+      <node pkg="robot_poe_ekf" type="robot_poe_ekf" name="robot_poe_ekf" output="creen"  repawn="fale">
+        <param name="output_frame" value="odom"/>
+        <param name="bae_footprint_frame" value="bae_link"/>
+        <param name="freq" value="30.0"/>
+        <param name="enor_timeout" value="1.0"/>
+        <param name="odom_ued" value="true"/>
+        <param name="imu_ued" value="true"/>
+        <param name="vo_ued" value="fale"/>
+        <param name="gp_ued" value="fale"/>
+        <param name="debug" value="fale"/>
+        <param name="elf_diagnoe" value="fale"/> 
+
+      </node>
+
+  <include file="$(find dzactuator)/launch/dzcamera.launch" />
+
+
+ </launch>
