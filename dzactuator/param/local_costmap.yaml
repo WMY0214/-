@@ -1,0 +1,15 @@
+local_costmap:
+  global_frame: map               # 局部代价地图的全局参考坐标系（与全局定位一致，通常为map）
+  robot_base_frame: base_link     # 机器人自身基坐标系（用于计算局部地图与机器人的相对位置）
+  update_frequency: 5.0           # 局部地图更新频率（Hz），需高于全局地图（保证实时避障）
+  publish_frequency: 5.0          # 局部地图发布频率（Hz），用于可视化实时障碍物信息
+  transform_tolerance: 1.0        # 坐标变换延迟容忍时间（s），与全局地图保持一致（避免定位误差）
+  rolling_window: true            # 启用滚动窗口模式（局部地图随机器人移动，仅保留周围关键区域）
+  width: 3.0                      # 局部地图宽度（m），需覆盖机器人前方主要感知范围（如激光雷达有效探测距离）
+  height: 3.0                     # 局部地图高度（m），通常与宽度一致（形成正方形感知窗口）
+  resolution: 0.05                # 地图分辨率（米/像素），需与全局地图一致（0.05为常规精细度）
+  
+  plugins:                        # 局部地图功能层（与全局地图共用层类型，但局部更侧重动态障碍物）
+    - {name: static_layer, type: "costmap_2d::StaticLayer"}       # 静态地图层（加载全局地图的局部区域）
+    - {name: obstacle_layer, type: "costmap_2d::ObstacleLayer"}   # 核心动态层（实时融合激光/视觉障碍物数据）
+    - {name: inflation_layer, type: "costmap_2d::InflationLayer"} # 安全膨胀层（扩展障碍物边界，避免贴近碰撞）  

@@ -1,0 +1,49 @@
+DWAPlannerROS:
+ 
+# 机器人运动学配置参数（与底盘物理特性强相关）
+  max_vel_x: 0.3              # X轴最大线速度（m/s）- 需匹配电机实际最大速度
+  min_vel_x: -0.3             # X轴最小线速度（m/s，负值表示允许后退）
+
+  max_vel_y: 0.0              # Y轴最大线速度（m/s）- 差速底盘设0（无横向移动能力）
+  min_vel_y: 0.0              # Y轴最小线速度（m/s）
+
+# 直线运动速度范围（与max_vel_x强相关）
+  max_vel_trans:  0.3         # 最大平移速度（m/s）- 通常等于max_vel_x
+  min_vel_trans:  0.1         # 最小平移速度（m/s）- 避免低速卡顿
+
+# 旋转速度配置（与转向电机性能相关）
+  max_vel_theta: 0.5          # 最大角速度（rad/s）- 需匹配转向系统最大转速
+  min_vel_theta: 0.1          # 最小角速度（rad/s）- 避免低速转向不灵敏
+
+# 加速度限制（防止急加速/急停损坏电机）
+  acc_lim_x: 0.1              # X轴线加速度限制（m/s²）- 需小于电机最大加速度
+  acc_lim_y: 0.0              # Y轴线加速度限制（m/s²）- 差速底盘设0
+  acc_lim_theta: 0.1          # 角加速度限制（rad/s²）- 需匹配转向系统响应能力
+
+# 目标到达容差（控制终点精度）
+  xy_goal_tolerance: 0.05     # XY平面位置容差（m）- 到达目标点±0.05m内视为成功
+  yaw_goal_tolerance: 0.17    # 角度容差（rad，约10°）- 到达目标角度±10°内视为成功
+  latch_xy_goal_tolerance: false  # 是否锁定位置容差（false：到达后继续调整角度）
+
+# 前向模拟参数（影响轨迹生成质量）
+  sim_time: 2.0               # 轨迹模拟时间（s）- 越长越安全但计算量越大（建议1.5-3.0）
+  vx_samples: 10              # X轴速度采样数量- 越大轨迹越密集（建议5-15）
+  vy_samples: 0               # Y轴速度采样数量- 差速底盘设0
+  vth_samples: 20             # 角速度采样数量- 越大转向轨迹越精细（建议10-30）
+  controller_frequency: 20.0  # 控制频率（Hz）- 需与实际控制周期匹配（建议10-30）
+
+# 轨迹评分参数（决定最优轨迹选择策略）
+  path_distance_bias: 15.0    # 路径贴合度权重- 值越大越贴近全局路径（建议5-20）
+  goal_distance_bias: 10.0    # 目标接近度权重- 值越大越优先接近目标（建议5-15）
+  occdist_scale: 0.02         # 障碍物距离权重- 值越大越远离障碍物（建议0.01-0.1）
+  forward_point_distance: 0.325  # 前向参考点距离（m）- 影响轨迹前瞻能力（建议0.2-0.5）
+  stop_time_buffer: 0.3       # 安全停止时间（s）- 预留刹车时间避免碰撞（建议0.2-0.5）
+  scaling_speed: 0.25         # 速度缩放阈值（m/s）- 超过此速度时启动障碍物膨胀
+  max_scaling_factor: 0.2     # 最大缩放因子- 限制障碍物膨胀幅度（建议0.1-0.3）
+
+# 震荡抑制参数（防止机器人来回晃动）
+  oscillation_reset_dist: 0.05  # 重置震荡状态的距离（m）- 移动超过此距离后清除震荡标记
+
+# 调试参数（用于可视化分析）
+  publish_traj_pc : true       # 是否发布轨迹点云（true：在Rviz中显示候选轨迹）
+  publish_cost_grid_pc: true   # 是否发布代价网格点云（true：显示轨迹评分热图）

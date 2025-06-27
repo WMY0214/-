@@ -1,0 +1,72 @@
+# move_base节点核心规划与控制参数（直接影响导航稳定性和故障恢复能力）
+shutdown_costmaps: false          # 影响：导航完成后是否关闭代价地图（false：保持运行支持连续导航；true：节省资源但需重启初始化）
+                                   # 推荐：常规任务（如巡检、配送）保持false；单次导航任务可设为true（减少后台资源占用）
+ 
+controller_frequency: 10.0         # 影响：局部控制器（如DWA）的更新频率（Hz），需与dwa_local_planner.yaml的controller_frequency（当前20.0Hz）匹配
+                                   # 推荐：不低于DWA频率的1/2（当前10.0Hz合理，平衡计算负载与控制精度）
+ 
+controller_patience: 10.0          # 影响：控制器无有效输出时的最大等待时间（s），超时触发恢复行为（避免传感器延迟导致误判）
+                                   # 推荐：低速机器人5s，高速/复杂环境10-15s（当前10.0s为通用值）
+ 
+planner_frequency: 1.0             # 影响：全局规划器（如A*）的更新频率（Hz），过高增加CPU负载（动态环境需更高频率）
+                                   # 推荐：静态环境1.0Hz（当前合理）；动态环境（如有人/车移动）提升至2-3Hz
+ 
+planner_patience: 3.0              # 影响：规划器无有效路径时的最大等待时间（s），超时触发恢复行为（平衡重试与效率）
+                                   # 推荐：3-5s（当前3.0s合理，避免长时间无路径阻塞导航）
+ 
+oscillation_timeout: 10.0          # 影响：机器人移动距离小于oscillation_distance时，判定为震荡的超时时间（s）
+                                   # 推荐：敏感场景（高精度导航）5s，通用场景10s（当前10.0s合理）
+ 
+oscillation_distance: 0.02         # 影响：震荡检测的最小移动距离阈值（m），小于此值视为无效移动（触发恢复）
+                                   # 推荐：高精度导航0.02m（当前合理）；宽松场景可增至0.05m（减少误触发）
+ 
+max_planning_retries: 1            # 影响：规划失败后的最大重试次数（超过则触发恢复行为）
+                                   # 推荐：1-3次（当前1次避免无限循环；复杂环境可增至2-3次）
+ 
+recovery_behavior_enabled: false   # 影响：是否启用自恢复行为（true：自动执行recovery_behaviors；false：需人工干预）
+                                   # 推荐：未知/动态环境（如仓库）设为true；已知稳定环境（如实验室）可设为false
+ 
+clearing_rotation_allowed: false   # 影响：是否允许执行"clearing_rotation"自恢复行为（与recovery_behaviors配合）
+                                   # 推荐：若传感器存在盲区（如激光雷达遮挡）可设为true；当前禁用可能因无需旋转或避免耗时
+ 
+ 
+recovery_behaviors:  # 自恢复行为列表（仅当recovery_behavior_enabled为true时生效）
+  - name: 'conservative_reset'      # 影响：清除局部障碍物层（保留静态地图），适用于轻微障碍物干扰
+    type: 'clear_costmap_recovery/ClearCostmapRecovery'  # 类型：清除代价地图指定层的障碍物数据
+ 
+  - name: 'clearing_rotation'       # 影响：机器人原地旋转重新扫描环境（更新障碍物感知），适用于传感器盲区问题
+    type: 'rotate_recovery/RotateRecovery'  # 类型：通过旋转更新障碍物感知数据
+ 
+  - name: 'clearing_move'           # 影响：低速移动并清除前方障碍物（突破局部死锁），适用于狭窄通道阻塞
+    type: 'move_slow_and_clear/MoveSlowAndClear'  # 类型：低速移动+局部地图清除
+ 
+conservative_reset:                # 保守重置参数（与clear_costmap_recovery插件强相关）
+  reset_distance: 1.0               # 影响：以机器人为中心的清除半径（m），过小无法覆盖干扰区域，过大可能误删有效数据
+                                   # 推荐：局部干扰场景1.0m（当前合理）；复杂环境可增至2.0m
+ 
+  layer_names: [obstacle_layer]     # 影响：仅清除障碍物层（保留静态地图），避免丢失已知环境信息（推荐配置）
+ 
+aggressive_reset:                  # 激进重置参数（比保守重置清除范围更大）
+  reset_distance: 3.0               # 影响：清除半径3.0m（适用于保守重置无效时的二次清除）
+                                   # 推荐：3.0-4.0m（当前3.0m合理，覆盖更大范围干扰）
+ 
+  layer_names: [obstacle_layer]     # 影响：同上（保护静态地图，推荐保持）
+ 
+super_reset:                       # 超级重置参数（最大范围清除）
+  reset_distance: 5.0               # 影响：清除半径5.0m（极端情况下使用，如严重定位丢失或大范围干扰）
+                                   # 推荐：5.0-6.0m（当前5.0m合理，避免过度清除）
+ 
+  layer_names: [obstacle_layer]     # 影响：同上（推荐保持）
+ 
+move_slow_and_clear:               # 缓慢移动清除参数（与move_slow_and_clear插件相关）
+  clearing_distance: 0.1            # 影响：单次移动清除的纵向距离（m），过小需多次移动，过大可能碰撞
+                                   # 推荐：0.1-0.2m（当前0.1m合理，平衡安全与效率）
+ 
+  limited_trans_speed: 0.1          # 影响：移动时的最大平移速度（m/s），需与dwa_local_planner的min_vel_trans=0.1匹配
+                                   # 推荐：与DWA的min_vel_trans一致（当前0.1m/s合理，避免低速卡顿）
+ 
+  limited_rot_speed: 0.4            # 影响：移动时的最大旋转速度（rad/s），需小于dwa_local_planner的max_vel_theta=0.5
+                                   # 推荐：≤max_vel_theta-0.1（当前0.4rad/s合理，保证控制平滑）
+ 
+  limited_distance: 0.3             # 影响：单次缓慢移动的最大距离（m），过长影响导航效率，过短无法突破阻塞
+                                   # 推荐：0.3-0.5m（当前0.3m合理，避免长时间低速移动）

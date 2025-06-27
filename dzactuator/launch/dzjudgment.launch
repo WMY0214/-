@@ -1,0 +1,17 @@
+<?xml version="1.0" ?>
+<launch>
+  <!-- 系统时间配置：使用真实硬件时间 -->
+  <param name="/use_sim_time" value="false" />
+  
+  <!-- 决策系统主节点 -->
+  <node name="dzjudgment" pkg="dzjudgment" type="dzjudgment" output="screen">
+    <!-- 下位机通信参数 -->
+    <param name="mcuserialport" value="/dev/dzesp32" type="string"/> <!-- ESP32串口设备路径 -->
+    <param name="mcubaudrate" value="115200" type="int"/>           <!-- 通信波特率（需与固件配置一致） -->
+    
+    <!-- 建议补充参数 -->
+    <!-- <param name="max_retry" value="3" type="int"/> -->         <!-- 通信失败重试次数 -->
+    <!-- <param name="debug_mode" value="0" type="int"/> -->      <!-- 调试模式（0-关闭，1-基础调试，2-详细日志） -->
+  </node>
+
+</launch>

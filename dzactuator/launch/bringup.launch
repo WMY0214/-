@@ -1,0 +1,50 @@
+<launch>
+  <!-- 坐标系参数定义 -->
+  <arg name="odom_frame_id"  default="odom"/>    <!-- 里程计坐标系 -->
+  <arg name="robot_frame_id"  default="base_link"/> <!-- 机器人基坐标系 -->
+  <arg name="gyro_frame_id"  default="imu_link"/>   <!-- IMU传感器坐标系 -->
+
+  <!-- 底盘控制节点：与下位机通信的核心节点 -->
+  <node pkg="dzactuator" type="dzactuator_node" name="dzactuator" output="screen" respawn="false">
+    <param name="serial_port_name"  type="string" value="/dev/dzactutor"/> <!-- 串口设备路径 -->
+    <param name="serial_baud_rate"  type="int"    value="115200"/>        <!-- 通信波特率 -->
+    <!-- 坐标系参数传递 -->
+    <param name="odom_frame_id"     type="string" value="$(arg odom_frame_id)"/> 
+    <param name="robot_frame_id"    type="string" value="$(arg robot_frame_id)"/> 
+    <param name="gyro_frame_id"     type="string" value="$(arg gyro_frame_id)"/> 
+    <!-- 里程计校准参数 -->
+    <param name="calibrate_lineSpeed" value="1" type="int"/> <!-- 线速度校准模式（0-禁用） -->
+    <param name="ticksPerMeter" value="1460" type="int"/>   <!-- 编码器每米脉冲数（需实际测量校准） -->
+    <param name="ticksPer2PI" value="1300" type="int"/>     <!-- 全转向圈数脉冲数 -->
+  </node>
+
+  <!-- 激光雷达驱动：RPLIDAR S3E型号 -->
+  <include file="$(find rplidar_ros)/launch/rplidar_s3e.launch"/> <!-- 扫描频率15Hz，360°扫描范围 -->
+
+  <!-- 传感器坐标系静态变换 -->
+  <!-- IMU安装位置：X-0.02m（左）, Y+0.03m（前）, Z+0.08m（上） -->
+  <node pkg="tf" type="static_transform_publisher" name="base_link_to_imulink"
+      args="-0.02 0.03 0.08 0.0 0.0 0.0 base_link imu_link 100" >
+  </node> 
+
+  <!-- 激光雷达安装位置：X+0.149m（前）, Z+0.109m（上）, 绕X轴旋转180°（倒置安装） -->
+  <node pkg="tf" type="static_transform_publisher" name="base_link_to_laser4"
+      args="0.149 0.0 0.109 3.14159 0.0 0.0 base_link laser 100" >
+  </node> 
+
+  <!-- 多传感器融合定位：扩展卡尔曼滤波 -->
+  <node pkg="robot_pose_ekf" type="robot_pose_ekf" name="robot_pose_ekf" output="screen" respawn="false">
+    <param name="output_frame" value="odom"/>       <!-- 输出坐标系 -->
+    <param name="base_footprint_frame" value="base_link"/> <!-- 基坐标系 -->
+    <param name="freq" value="30.0"/>              <!-- 滤波频率30Hz -->
+    <param name="sensor_timeout" value="1.0"/>      <!-- 传感器超时阈值 -->
+    <param name="odom_used" value="true"/>          <!-- 启用里程计数据 -->
+    <param name="imu_used" value="true"/>           <!-- 启用IMU数据 -->
+    <param name="vo_used" value="false"/>           <!-- 禁用视觉里程计 -->
+    <param name="debug" value="false"/>            <!-- 调试模式关闭 -->
+  </node>
+
+  <!-- 视觉传感器节点：RGB摄像头 -->
+  <include file="$(find dzactuator)/launch/dzcamera.launch" /> <!-- 通常配置为640x480@30fps -->
+
+</launch>

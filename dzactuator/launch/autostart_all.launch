@@ -1,0 +1,16 @@
+<launch>
+  <!-- 硬件驱动层：加载传感器和底盘控制节点 -->
+  <include file="$(find dzactuator)/launch/bringup.launch" />
+  
+  <!-- 定位模块：自适应蒙特卡洛定位（AMCL） -->
+  <include file="$(find dzactuator)/launch/amcl.launch" />
+  
+  <!-- 导航核心：路径规划与运动控制 -->
+  <include file="$(find dzactuator)/launch/dznavigation.launch" />
+  
+  <!-- 决策系统：任务调度与状态机管理 -->
+  <include file="$(find dzactuator)/launch/dzjudgment.launch" />
+  
+  <!-- 视觉处理：基于RKNN的AI推理模块 -->
+  <include file="$(find dzactuator)/launch/dzrknnpt.launch" />
+</launch>

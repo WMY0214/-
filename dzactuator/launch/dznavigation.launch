@@ -1,0 +1,39 @@
+<?xml version="1.0" ?>
+<launch>
+  <!-- 导航系统主节点 -->
+  <node pkg="move_base" type="move_base" respawn="false" name="move_base" output="screen">
+    <!-- 本地规划器选择：TEB算法（适合阿克曼转向） -->
+    <param name="base_local_planner" value="teb_local_planner/TebLocalPlannerROS" />
+    <!-- 备选方案：DWA算法（适合差速驱动，当前注释） -->
+    <!-- <param name="base_local_planner" value="dwa_local_planner/DWAPlannerROS" /> -->
+
+    <!-- 代价地图公共参数（全局与局部共享配置） -->
+    <rosparam file="$(find dzactuator)/param/costmap_common.yaml" command="load" ns="global_costmap" />
+    <rosparam file="$(find dzactuator)/param/costmap_common.yaml" command="load" ns="local_costmap" />
+    
+    <!-- 局部代价地图配置（实时障碍物感知） -->
+    <rosparam file="$(find dzactuator)/param/local_costmap.yaml" command="load" />
+    
+    <!-- 全局代价地图配置（静态地图加载） -->
+    <rosparam file="$(find dzactuator)/param/global_costmap.yaml" command="load" />
+    
+    <!-- 导航核心参数（规划频率、目标容差等） -->
+    <rosparam file="$(find dzactuator)/param/move_base_planner.yaml" command="load" />
+ 
+    <!-- 全局路径规划器配置（通常为NavFN） -->
+    <rosparam command="load" file="$(find dzactuator)/param/base_global_planner.yaml" />
+    
+    <!-- TEB本地规划器参数（轨迹优化配置） -->
+    <rosparam command="load" file="$(find dzactuator)/param/teb_local_planner.yaml" />
+    
+    <!-- move_base基础参数（恢复行为、控制频率） -->
+    <rosparam file="$(find dzactuator)/param/move_base_params.yaml" command="load" />
+    
+    <!-- 备选DWA参数文件（当前注释，文件名拼写错误应为dwa_local_planner.yaml） -->
+    <!-- <rosparam command="load" file="$(find dzactuator)/param/dwa_loacl_planner.yaml" /> -->
+  </node>
+
+  <!-- 代价地图清理服务（用于恢复行为） -->
+  <node pkg="clear_costmap_recovery" type="costmap_cleaner" name="costmap_cleaner" respawn="true" output="screen"/>
+
+</launch>

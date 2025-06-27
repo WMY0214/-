@@ -1,0 +1,32 @@
+global_costmap:
+  # 坐标系配置（与TF树强相关）
+  global_frame: map               # 影响：全局定位基准，必须与SLAM/定位节点发布的固定坐标系一致（如gmapping输出的map）
+                                   # 推荐：固定场景保持"map"，动态建图可改为"odom"（但需配合滚动窗口）
+  
+  robot_base_frame: base_link     # 影响：机器人自身坐标原点，需与URDF模型中定义的基坐标系名称一致
+                                   # 推荐：标准配置为"base_link"（与大多数机器人模型兼容）
+
+  # 实时性与计算资源平衡参数
+  update_frequency: 5.0           # 影响：数值越大，代价地图更新越及时（但CPU占用越高）
+                                   # 推荐：常规移动机器人5.0Hz（平衡实时性与计算负载，高速机器人可提升至10.0Hz）
+  
+  publish_frequency: 5.0          # 影响：决定RViz等工具中代价地图的刷新频率（不影响实际导航计算）
+                                   # 推荐：与update_frequency保持一致（避免可视化延迟导致误判）
+
+  # 鲁棒性相关参数
+  transform_tolerance: 1.0        # 影响：允许TF变换延迟的最大时间（超过则报错并停止更新）
+                                   # 推荐：0.5-1.0s（低速机器人0.5s，高速/复杂环境建议1.0s）
+
+  # 地图模式选择
+  rolling_window: false           # 影响：false时使用全局固定地图（需已知完整地图）；true时地图随机器人移动（适合未知大场景）
+                                   # 推荐：已知地图场景保持false（减少计算量），未知环境建图导航时设为true
+
+  # 地图精度参数（关键！需与SLAM建图分辨率一致）
+  resolution: 0.05                # 影响：数值越小，地图越精细（但内存占用越高）；需与SLAM建图分辨率匹配（如gmapping.launch中delta=0.05）
+                                   # 推荐：与gmapping.launch的<param name="delta" value="0.05"/>保持一致（当前0.05合理）
+
+  # 功能层配置（按顺序叠加生效）
+  plugins:                        # 影响：决定代价地图的核心功能（静态地图、动态障碍物、安全膨胀）
+    - {name: static_layer, type: "costmap_2d::StaticLayer"}       # 推荐：必须包含（加载已知地图数据）
+    - {name: obstacle_layer, type: "costmap_2d::ObstacleLayer"}   # 推荐：必须包含（实时感知激光/视觉障碍物）
+    - {name: inflation_layer, type: "costmap_2d::InflationLayer"} # 推荐：必须包含（扩展障碍物安全区域，避免碰撞）

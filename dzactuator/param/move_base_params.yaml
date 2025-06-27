@@ -1,0 +1,5 @@
+# move_base核心参数配置（与导航功能开关、数据存储路径强相关）
+savePath: "/home/duzhong/dzacs/src/resource/mapping.txt"  # 地图/路径数据保存路径（需确保目录存在且有写入权限）
+saveStopPointPath: "/home/duzhong/dzacs/src/resource/stopmapping.txt"  # 停止点坐标保存路径（用于记录特定任务停止位置）
+move_base/saveMapping: false  # 地图保存功能开关（true：启用实时保存；false：禁用，避免频繁IO影响导航性能）
+move_base/controller_frequency: 4  # 局部控制器更新频率（Hz），需与DWA规划器的controller_frequency（当前20.0Hz）匹配（建议不低于规划器频率的1/5）
