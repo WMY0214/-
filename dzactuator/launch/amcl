@@ -1,58 +1,55 @@
 <?xml version="1.0" ?>
+<!-- 定义ROS启动文件的根元素，用于启动多个节点 -->
 <launch>
 
+	<!-- 启动地图服务器节点，加载指定的地图文件 -->
 	<node name="map_server" pkg="map_server" type="map_server" args="/home/duzhong/dzacs/src/resource/maps/newmap.yaml" output="screen"/>
 
+	<!-- 启动自适应蒙特卡洛定位（AMCL）节点，用于机器人的定位 -->
 	<node pkg="amcl" type="amcl" name="amcl" output="screen">
-		<!-- Publish scans from best pose at a max of 10 Hz -->
+		<!-- 控制是否使用地图话题，设为false表示不使用地图话题 -->
 		<param name="use_map_topic" value="false"/>
+		<!-- 指定激光扫描数据的话题名称 -->
 		<param name="scan_topic_" value="scan"/>
+		<!-- 指定里程计模型类型，diff-corrected表示差分驱动修正模型 -->
 		<param name="odom_model_type" value="diff-corrected"/>
+		<!-- 里程计噪声参数，影响里程计旋转估计的噪声 -->
 		<param name="odom_alpha5" value="0.1"/>
+		<!-- 坐标变换的容差，单位为秒，用于处理时间同步问题 -->
 		<param name="transform_tolerance" value="0.2" />
-		<param name="gui_publish_rate" value="10.0"/> <!-- Maximum rate (Hz) at which scans and paths are published for visualization, -1.0 to disable. -->
+		<!-- 图形界面发布频率，单位为Hz，指定扫描和路径可视化的最大发布频率，-1.0表示禁用 -->
+		<param name="gui_publish_rate" value="10.0"/> 
+		<!-- 激光扫描时使用的最大激光束数量，用于减少计算量 -->
 		<param name="laser_max_beams" value="60"/>
+		<!-- 粒子滤波器中允许的最小粒子数量 -->
 		<param name="min_particles" value="500"/>
+		<!-- 粒子滤波器中允许的最大粒子数量 -->
 		<param name="max_particles" value="800"/>
+		<!-- KLD采样误差容限，用于动态调整粒子数量 -->
 		<param name="kld_err" value="0.05"/>
+		<!-- KLD采样置信度，用于动态调整粒子数量 -->
 		<param name="kld_z" value="0.99"/>
-		<param name="odom_alpha1" value="0.3"/> <!-- Specifies the expected noise in odometry's rotation estimate from the rotational component of the robot's motion. -->
-		<param name="odom_alpha2" value="1.2"/> <!-- Specifies the expected noise in odometry's rotation estimate from translational component of the robot's motion. -->
-		<!-- translation std dev, m -->
-		<param name="odom_alpha3" value="3.7"/> <!-- Specifies the expected noise in odometry's translation estimate from the translational component of the robot's motion. -->
-		<param name="odom_alpha4" value="0.3"/> <!-- Specifies the expected noise in odometry's translation estimate from the rotational component of the robot's motion. -->
+		<!-- 里程计噪声参数，指定由机器人旋转运动引起的里程计旋转估计的噪声 -->
+		<param name="odom_alpha1" value="0.3"/> 
+		<!-- 里程计噪声参数，指定由机器人平移运动引起的里程计旋转估计的噪声 -->
+		<param name="odom_alpha2" value="1.2"/> 
+		<!-- 里程计噪声参数，指定由机器人平移运动引起的里程计平移估计的噪声 -->
+		<param name="odom_alpha3" value="3.7"/> 
+		<!-- 里程计噪声参数，指定由机器人旋转运动引起的里程计平移估计的噪声 -->
+		<param name="odom_alpha4" value="0.3"/> 
+		<!-- 激光传感器模型参数，激光击中物体的概率 -->
 		<param name="laser_z_hit" value="0.5"/>
+		<!-- 激光传感器模型参数，激光短反射的概率 -->
 		<param name="laser_z_short" value="0.05"/>
+		<!-- 激光传感器模型参数，激光测量值达到最大值的概率 -->
 		<param name="laser_z_max" value="0.05"/>
+		<!-- 激光传感器模型参数，激光随机测量的概率 -->
 		<param name="laser_z_rand" value="0.5"/>
+		<!-- 激光传感器模型参数，激光击中物体时的噪声标准差 -->
 		<param name="laser_sigma_hit" value="0.2"/>
+		<!-- 激光传感器模型参数，激光短反射的衰减率 -->
 		<param name="laser_lambda_short" value="0.1"/>
+		<!-- 指定激光传感器模型类型，likelihood_field表示似然场模型 -->
 		<param name="laser_model_type" value="likelihood_field"/>
+		<!-- 注释掉的激光传感器模型类型，beam表示光束模型 -->
 		<!-- <param name="laser_model_type" value="beam"/> -->
-		<param name="laser_likelihood_max_dist" value="2.0"/>
-		<param name="update_min_d" value="0.1"/> <!-- Translational movement required before performing a filter update. -->
-		<param name="update_min_a" value="0.1"/> <!-- Rotational movement required before performing a filter update. 0.1 represents 5.7 degrees  -->
-		<param name="odom_frame_id" value="odom"/>
-		<!-- <param name="odom_frame_id" value="odom_ekf"/> -->
-		<param name="base_frame_id" value="base_link"/>
-		<!-- <param name="odom_frame_id" value="$(arg slave_robot)/odom"/>
-		<param name="base_frame_id" value="$(arg slave_robot)/base_link"/> -->
-
-		<param name="resample_interval" value="1"/> <!-- Number of filter updates required before resampling. -->
-		<!-- Increase tolerance because the computer can get quite busy -->
-		<param name="transform_tolerance" value="1.0"/> <!-- Default 0.1; time with which to post-date the transform that is published, to indicate that this transform is valid into the future. -->
-		<param name="recovery_alpha_slow" value="0.001"/> <!-- Exponential decay rate for the slow average weight filter, used in deciding when to recover by adding random poses. -->
-		<param name="recovery_alpha_fast" value="0.1"/> <!-- Exponential decay rate for the fast average weight filter, used in deciding when to recover by adding random poses. -->
-		<!-- initial_pose -->
-		
-		<param name="initial_pose_x" value="0.0"/>
-		<param name="initial_pose_y" value="0.0"/>
-		<param name="initial_pose_a" value="0.0"/>
-		<param name="initial_cov_xx" value="0.25"/>
-		<param name="initial_cov_yy" value="0.25"/>
-		<param name="initial_cov_aa" value="0.1"/>
-		<param name="save_pose_rate" value="-1"/>
-		
-	</node>
-</launch>
-
